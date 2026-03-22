@@ -20,7 +20,7 @@
             padding: 40px; 
             box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
             text-align: center; 
-            max-width: 400px;
+            max-width: 450px;
             width: 100%;
         }
         h1 { color: #d4af37; margin-bottom: 30px; }
@@ -28,17 +28,18 @@
             display: flex; 
             justify-content: space-between; 
             margin: 15px 0; 
-            font-size: 1.2em; 
+            font-size: 1.1em; 
             color: #555;
         }
         .total-value { 
-            font-size: 2.5em; 
+            font-size: 2.2em; 
             font-weight: bold; 
-            color: #e74c3c; 
+            color: #333; 
             margin-top: 20px; 
             border-top: 2px dashed #eee; 
             padding-top: 20px;
         }
+        .highlight { font-weight: bold; }
     </style>
 </head>
 <body>
@@ -47,54 +48,91 @@
         <h1>✨ 若雲的黃金小金庫</h1>
         
         <div class="data-row">
-            <span>目前牌價 (TWD/克)：</span>
-            <span id="price">載入中...</span>
+            <span>目前銀行收購價：</span>
+            <span>NT$ <span id="price" class="highlight">載入中...</span> /克</span>
         </div>
         
         <div class="data-row">
             <span>累積黃金重量：</span>
-            <span><span id="grams">0</span> 克</span>
+            <span><span id="grams" class="highlight">0</span> 克</span>
+        </div>
+
+        <div class="data-row">
+            <span>總投入本金：</span>
+            <span>NT$ <span id="cost" class="highlight">0</span></span>
+        </div>
+
+        <div class="data-row">
+            <span>未實現損益：</span>
+            <span id="profit" class="highlight">0</span>
+        </div>
+
+        <div class="data-row">
+            <span>投資報酬率：</span>
+            <span id="roi" class="highlight">0%</span>
         </div>
         
         <div class="total-value">
-            NT$ <span id="total">0</span>
+            目前總值 NT$ <span id="total">0</span>
         </div>
     </div>
 
     <script>
-  // 【請替換】換成你在 GAS 的網址
-const gasApiUrl = 'https://script.google.com/macros/s/AKfycbzicB5gW0aFVQHvMlI1nQ9bUOMQnA6DqSZSm6343I7kdyGf3GTIGcAuaUIt5k2OlMNX_A/exec'; 
+        // 【請替換】換成你在 GAS 的網址
+        const gasApiUrl = 'https://script.google.com/macros/s/AKfycbzicB5gW0aFVQHvMlI1nQ9bUOMQnA6DqSZSm6343I7kdyGf3GTIGcAuaUIt5k2OlMNX_A/exec'; 
 
-async function updateDashboard() {
-    try {
-        const response = await fetch(gasApiUrl, { redirect: "follow" });
-        const data = await response.json();
-        
-        if(data.success) {
-            const currentPrice = data.buyPrice; 
-            
-            // 【關鍵修改】不再使用寫死的數字，直接讀取 API 傳來的真實克數
-            const currentGrams = data.totalGrams;
-            
-            const totalValue = Math.floor(currentPrice * currentGrams);
-            
-            document.getElementById('price').textContent = currentPrice.toLocaleString();
-            
-            // toFixed(2) 可以讓克數漂亮地顯示到小數點後兩位
-            document.getElementById('grams').textContent = currentGrams.toFixed(2); 
-            document.getElementById('total').textContent = totalValue.toLocaleString();
-        } else {
-            document.getElementById('price').textContent = '資料解析失敗';
+        async function updateDashboard() {
+            try {
+                const response = await fetch(gasApiUrl, { redirect: "follow" });
+                const data = await response.json();
+                
+                if(data.success) {
+                    const currentPrice = data.buyPrice; 
+                    const currentGrams = data.totalGrams;
+                    const totalCost = data.totalCost; // 從試算表抓來的總成本
+                    
+                    // 計算總值、損益與報酬率
+                    const totalValue = Math.floor(currentPrice * currentGrams);
+                    const profit = totalValue - totalCost;
+                    const roi = totalCost > 0 ? ((profit / totalCost) * 100).toFixed(2) : 0;
+                    
+                    // 更新基本數據
+                    document.getElementById('price').textContent = currentPrice.toLocaleString();
+                    document.getElementById('grams').textContent = currentGrams.toFixed(2);
+                    document.getElementById('cost').textContent = totalCost.toLocaleString();
+                    document.getElementById('total').textContent = totalValue.toLocaleString();
+
+                    // 更新損益與報酬率 (加上顏色與正負號)
+                    const profitEl = document.getElementById('profit');
+                    const roiEl = document.getElementById('roi');
+
+                    if (profit > 0) {
+                        profitEl.textContent = `+ NT$ ${profit.toLocaleString()}`;
+                        profitEl.style.color = '#e74c3c'; // 賺錢顯示紅色
+                        roiEl.textContent = `+ ${roi}%`;
+                        roiEl.style.color = '#e74c3c';
+                    } else if (profit < 0) {
+                        profitEl.textContent = `- NT$ ${Math.abs(profit).toLocaleString()}`;
+                        profitEl.style.color = '#2ecc71'; // 賠錢顯示綠色
+                        roiEl.textContent = `${roi}%`;
+                        roiEl.style.color = '#2ecc71';
+                    } else {
+                        profitEl.textContent = `NT$ 0`;
+                        profitEl.style.color = '#555';
+                        roiEl.textContent = `0%`;
+                        roiEl.style.color = '#555';
+                    }
+                    
+                } else {
+                    document.getElementById('price').textContent = '資料解析失敗';
+                }
+            } catch (error) {
+                console.error('獲取報價失敗:', error);
+                document.getElementById('price').textContent = '無法連線';
+            }
         }
-        
-    } catch (error) {
-        console.error('獲取報價失敗:', error);
-        document.getElementById('price').textContent = '無法連線';
-    }
-}
 
-updateDashboard();
-            
+        updateDashboard();
     </script>
 </body>
 </html>
