@@ -62,20 +62,19 @@
     </div>
 
     <script>
-        // 這裡設定若雲目前擁有的黃金克數
-        const currentGrams = 15.5; 
-        
-        // 模擬獲取黃金價格的函數
-const gasApiUrl =https://script.google.com/macros/s/AKfycbzicB5gW0aFVQHvMlI1nQ9bUOMQnA6DqSZSm6343I7kdyGf3GTIGcAuaUIt5k2OlMNX_A/exec
+     // 設定目前擁有的黃金克數
+const currentGrams = 15.5; 
 
-       async function updateDashboard() {
+// 【請替換】換成你在 GAS 複製的網址，記得頭尾的引號要保留！
+const gasApiUrl = 'https://script.google.com/macros/s/你的專屬網址/exec'; 
+
+async function updateDashboard() {
     try {
-        const response = await fetch(gasApiUrl);
+        // 設定 redirect 為 follow，確保 GAS 的轉址能順利運作
+        const response = await fetch(gasApiUrl, { redirect: "follow" });
         const data = await response.json();
         
         if(data.success) {
-            // 在真實的黃金存摺中，如果要「變現」，是看銀行的「買入價」
-            // 用買入價來計算現值，可以順便教導買賣價差的觀念
             const currentPrice = data.buyPrice; 
             const totalValue = Math.floor(currentPrice * currentGrams);
             
@@ -88,12 +87,14 @@ const gasApiUrl =https://script.google.com/macros/s/AKfycbzicB5gW0aFVQHvMlI1nQ9b
         
     } catch (error) {
         console.error('獲取報價失敗:', error);
+        // 如果連線失敗，會在這裡顯示「無法連線」而不是一直載入中
         document.getElementById('price').textContent = '無法連線';
     }
 }
 
-        // 網頁載入時執行一次
-        updateDashboard();
+// 【關鍵！】這行一定要有，網頁載入才會啟動上方的函數
+updateDashboard();   
+            
     </script>
 </body>
 </html>
