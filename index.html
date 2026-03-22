@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>若雲的黃金小金庫</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f9f9f9; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .dashboard { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 40px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            text-align: center; 
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 { color: #d4af37; margin-bottom: 30px; }
+        .data-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 15px 0; 
+            font-size: 1.2em; 
+            color: #555;
+        }
+        .total-value { 
+            font-size: 2.5em; 
+            font-weight: bold; 
+            color: #e74c3c; 
+            margin-top: 20px; 
+            border-top: 2px dashed #eee; 
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <h1>✨ 若雲的黃金小金庫</h1>
+        
+        <div class="data-row">
+            <span>目前牌價 (TWD/克)：</span>
+            <span id="price">載入中...</span>
+        </div>
+        
+        <div class="data-row">
+            <span>累積黃金重量：</span>
+            <span><span id="grams">0</span> 克</span>
+        </div>
+        
+        <div class="total-value">
+            NT$ <span id="total">0</span>
+        </div>
+    </div>
+
+    <script>
+        // 這裡設定若雲目前擁有的黃金克數
+        const currentGrams = 15.5; 
+        
+        // 模擬獲取黃金價格的函數
+const gasApiUrl =https://script.google.com/macros/s/AKfycbzicB5gW0aFVQHvMlI1nQ9bUOMQnA6DqSZSm6343I7kdyGf3GTIGcAuaUIt5k2OlMNX_A/exec
+
+       async function updateDashboard() {
+    try {
+        const response = await fetch(gasApiUrl);
+        const data = await response.json();
+        
+        if(data.success) {
+            // 在真實的黃金存摺中，如果要「變現」，是看銀行的「買入價」
+            // 用買入價來計算現值，可以順便教導買賣價差的觀念
+            const currentPrice = data.buyPrice; 
+            const totalValue = Math.floor(currentPrice * currentGrams);
+            
+            document.getElementById('price').textContent = currentPrice.toLocaleString();
+            document.getElementById('grams').textContent = currentGrams;
+            document.getElementById('total').textContent = totalValue.toLocaleString();
+        } else {
+            document.getElementById('price').textContent = '資料解析失敗';
+        }
+        
+    } catch (error) {
+        console.error('獲取報價失敗:', error);
+        document.getElementById('price').textContent = '無法連線';
+    }
+}
+
+        // 網頁載入時執行一次
+        updateDashboard();
+    </script>
+</body>
+</html>
