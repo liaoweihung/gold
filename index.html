@@ -62,24 +62,26 @@
     </div>
 
     <script>
-     // 設定目前擁有的黃金克數
-const currentGrams = 15.5; 
-
-// 【請替換】換成你在 GAS 複製的網址，記得頭尾的引號要保留！
+  // 【請替換】換成你在 GAS 的網址
 const gasApiUrl = 'https://script.google.com/macros/s/AKfycbzicB5gW0aFVQHvMlI1nQ9bUOMQnA6DqSZSm6343I7kdyGf3GTIGcAuaUIt5k2OlMNX_A/exec'; 
 
 async function updateDashboard() {
     try {
-        // 設定 redirect 為 follow，確保 GAS 的轉址能順利運作
         const response = await fetch(gasApiUrl, { redirect: "follow" });
         const data = await response.json();
         
         if(data.success) {
             const currentPrice = data.buyPrice; 
+            
+            // 【關鍵修改】不再使用寫死的數字，直接讀取 API 傳來的真實克數
+            const currentGrams = data.totalGrams;
+            
             const totalValue = Math.floor(currentPrice * currentGrams);
             
             document.getElementById('price').textContent = currentPrice.toLocaleString();
-            document.getElementById('grams').textContent = currentGrams;
+            
+            // toFixed(2) 可以讓克數漂亮地顯示到小數點後兩位
+            document.getElementById('grams').textContent = currentGrams.toFixed(2); 
             document.getElementById('total').textContent = totalValue.toLocaleString();
         } else {
             document.getElementById('price').textContent = '資料解析失敗';
@@ -87,13 +89,11 @@ async function updateDashboard() {
         
     } catch (error) {
         console.error('獲取報價失敗:', error);
-        // 如果連線失敗，會在這裡顯示「無法連線」而不是一直載入中
         document.getElementById('price').textContent = '無法連線';
     }
 }
 
-// 【關鍵！】這行一定要有，網頁載入才會啟動上方的函數
-updateDashboard();   
+updateDashboard();
             
     </script>
 </body>
